@@ -24,6 +24,13 @@ enum class ListErrors
 
     MEMORY_ERR,
 
+    INVALID_NEXT_PTR,
+    INVALID_PREV_PTR,
+    
+    INVALID_VALUE,
+    INVALID_ELEMENT_PTR,
+    
+    INVALID_FICTIOUS_ELEMENT,
 };
 
 

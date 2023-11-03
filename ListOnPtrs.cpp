@@ -15,7 +15,17 @@ static inline void CreateNode(FILE* outDotFile,
                               const size_t id, const int value, 
                               const size_t next, const size_t prev);
 
-#define LIST_CHECK(list)
+static void inline CreateImgInLogFile(const size_t imgIndex);
+
+#define LIST_CHECK(list)                                \
+do                                                      \
+{                                                       \
+    ListErrors listVerifyErr = ListVerify((list));      \
+                                                        \
+    if (listVerifyErr != ListErrors::NO_ERR)            \
+        return listVerifyErr;                           \
+} while (0)
+
 
 ListErrors ListCtor(ListType* list)
 {
@@ -23,11 +33,16 @@ ListErrors ListCtor(ListType* list)
 
     ListElemType* fictiousElement = nullptr;
     ListErrors error = ListElemCtor(&fictiousElement);
+    
+    if (error != ListErrors::NO_ERR)
+        return error;
 
     list->end  = fictiousElement;
     list->size = 0;
 
-    return error;
+    LIST_CHECK(list);
+
+    return ListErrors::NO_ERR;
 }
 
 ListErrors ListDtor(ListType* list)
@@ -56,7 +71,27 @@ ListErrors ListDtor(ListType* list)
 ListErrors ListVerify(ListType* list)
 {
     assert(list);
+    
+    if (list->end == nullptr)
+        return ListErrors::INVALID_FICTIOUS_ELEMENT;
 
+    for (ListElemType* listElem = GetListHead(list); listElem != list->end; 
+                                                     listElem  = listElem->next)
+    {
+        if (listElem->next == listElem)
+            return ListErrors::INVALID_NEXT_PTR;
+        if (listElem->prev == listElem)
+            return ListErrors::INVALID_PREV_PTR;
+
+        if (listElem->value == POISON)
+            return ListErrors::INVALID_VALUE;
+        
+        if (listElem == list->end)
+            return ListErrors::INVALID_ELEMENT_PTR;
+    }
+
+    if (list->end->value != POISON)
+        return ListErrors::INVALID_FICTIOUS_ELEMENT;
 
     return ListErrors::NO_ERR;
 }
@@ -120,6 +155,22 @@ static inline void CreateNode(FILE* outDotFile,
                         id, id,
                         value, 
                         next, prev); 
+}
+
+static void inline CreateImgInLogFile(const size_t imgIndex)
+{
+    static const size_t maxImgNameLength  = 64;
+    static char imgName[maxImgNameLength] = "";
+    snprintf(imgName, maxImgNameLength, "imgs/img_%zu_time_%s.png", imgIndex, __TIME__);
+
+    static const size_t     maxCommandLength  = 128;
+    static char commandName[maxCommandLength] = "";
+    snprintf(commandName, maxCommandLength, "dot list.dot -T png -o %s", imgName);
+
+    system(commandName);
+
+    snprintf(commandName, maxCommandLength, "<img src = \"%s\">", imgName);    
+    Log(commandName);
 }
 
 void ListGraphicDump(ListType* list)
@@ -187,19 +238,7 @@ void ListGraphicDump(ListType* list)
 
     static size_t imgIndex = 0;
 
-    static const size_t maxImgNameLength  = 64;
-    static char imgName[maxImgNameLength] = "";
-    snprintf(imgName, maxImgNameLength, "imgs/img_%zu_time_%s.png", imgIndex, __TIME__);
-
-    static const size_t     maxCommandLength  = 128;
-    static char commandName[maxCommandLength] = "";
-    snprintf(commandName, maxCommandLength, "dot list.dot -T png -o %s", imgName);
-
-    system(commandName);
-
-    snprintf(commandName, maxCommandLength, "<img src = \"%s\">", imgName);    
-    Log(commandName);
-
+    CreateImgInLogFile(imgIndex);
     imgIndex++;    
 }
 
@@ -209,6 +248,8 @@ ListErrors ListInsert(ListType* list, ListElemType* anchor, const int value,
     assert(list);
     assert(anchor);
     assert(insertedValPtr);
+
+    LIST_CHECK(list);
 
     ListElemType* elemToInsert = nullptr;
     ListErrors error = ListElemCtor(&elemToInsert);
@@ -224,6 +265,8 @@ ListErrors ListInsert(ListType* list, ListElemType* anchor, const int value,
 
     list->size++;
 
+    LIST_CHECK(list);
+
     return ListErrors::NO_ERR;
 }
 
@@ -232,6 +275,8 @@ ListErrors ListErase (ListType* list, ListElemType* anchor)
     assert(list);
     assert(anchor);
 
+    LIST_CHECK(list);
+
     anchor->prev->next = anchor->next;
     anchor->next->prev = anchor->prev;
 
@@ -239,6 +284,8 @@ ListErrors ListErase (ListType* list, ListElemType* anchor)
     ListElemDtor(anchor);
 
     list->size--;
+
+    LIST_CHECK(list);
 
     return ListErrors::NO_ERR;
 }
