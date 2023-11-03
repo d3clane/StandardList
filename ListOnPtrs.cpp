@@ -112,11 +112,11 @@ static inline void CreateNode(FILE* outDotFile,
 
     fprintf(outDotFile, "node%zu"
                         "[shape=Mrecord, style=filled, fillcolor=\"#7293ba\","
-                                            "label=\" id: %zu |"
-                                                  "value: %d  |" 
-                                              "<f0> next: %zu |"
-                                             "<f1> prev: %zu\","
-                                             "color = \"#008080\"];\n",
+                        "label=\" id: %zu |"
+                              "value: %d  |" 
+                          "<f0> next: %zu |"
+                          "<f1> prev: %zu\","
+                        "color = \"#008080\"];\n",
                         id, id,
                         value, 
                         next, prev); 
