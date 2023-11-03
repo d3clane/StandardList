@@ -15,6 +15,8 @@ static inline void CreateNode(FILE* outDotFile,
                               const size_t id, const int value, 
                               const size_t next, const size_t prev);
 
+#define LIST_CHECK(list)
+
 ListErrors ListCtor(ListType* list)
 {
     assert(list);
@@ -54,6 +56,7 @@ ListErrors ListDtor(ListType* list)
 ListErrors ListVerify(ListType* list)
 {
     assert(list);
+
 
     return ListErrors::NO_ERR;
 }
@@ -176,7 +179,8 @@ void ListGraphicDump(ListType* list)
     fprintf(outDotFile, "edge[color = \"lightgreen\"];\n");
     fprintf(outDotFile, "head->node%zu;\n", 1lu);
     fprintf(outDotFile, "tail->node%zu;\n", list->size);
-    
+    fprintf(outDotFile, "\"Fictious element\"->node%zu;\n", 0lu);
+
     fprintf(outDotFile, "}\n");
 
     fclose(outDotFile);
