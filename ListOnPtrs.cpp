@@ -49,8 +49,8 @@ ListErrors ListDtor(ListType* list)
 {
     assert(list);
 
-    ListElemType* listBlock = GetListHead(list);
-    ListElemType* listTail  = GetListTail(list);
+    ListElemType* listBlock = ListGetHead(list);
+    ListElemType* listTail  = ListGetTail(list);
 
     while (listBlock != listTail)
     {
@@ -75,7 +75,7 @@ ListErrors ListVerify(ListType* list)
     if (list->end == nullptr)
         return ListErrors::INVALID_FICTIOUS_ELEMENT;
 
-    for (ListElemType* listElem = GetListHead(list); listElem != list->end; 
+    for (ListElemType* listElem = ListGetHead(list); listElem != list->end; 
                                                      listElem  = listElem->next)
     {
         if (listElem->next == listElem)
@@ -120,8 +120,8 @@ void ListTextDump(ListType* list, const char* fileName,
 
     LogBegin(fileName, funcName, line);
 
-    Log("Head - %p\n", GetListHead(list));
-    Log("Tail - %p\n", GetListTail(list));
+    Log("Head - %p\n", ListGetHead(list));
+    Log("Tail - %p\n", ListGetTail(list));
     Log("End  - %p\n", list->end);
     Log("Size: %zu\n", list->size);
 
@@ -129,7 +129,7 @@ void ListTextDump(ListType* list, const char* fileName,
          list->end, list->end->value, list->end->next, list->end->prev);
 
     size_t elemId = 1;
-    for (ListElemType* listElem = GetListHead(list); listElem != list->end; listElem = listElem->next)
+    for (ListElemType* listElem = ListGetHead(list); listElem != list->end; listElem = listElem->next)
     {
         Log("Element[%p] id: %zu, value: %d, next: %p, prev: %p\n",
              listElem, elemId, listElem->value, listElem->next, listElem->prev);
@@ -191,8 +191,8 @@ void ListGraphicDump(ListType* list)
 
     //-----Other elements nodes-----
 
-    ListElemType* listTail = GetListTail(list);
-    for (ListElemType* listElem = GetListHead(list); listElem != listTail; listElem = listElem->next)
+    ListElemType* listTail = ListGetTail(list);
+    for (ListElemType* listElem = ListGetHead(list); listElem != listTail; listElem = listElem->next)
     {
         CreateNode(outDotFile, elemId, listElem->value, elemId + 1, elemId - 1); 
         elemId++;     
@@ -331,7 +331,7 @@ static inline ListErrors ListElemInit(ListElemType* elem,
     return ListErrors::NO_ERR;
 }
 
-ListElemType* GetListHead(ListType* list)
+ListElemType* ListGetHead(ListType* list)
 {
     assert(list);
     assert(list->end);
@@ -339,7 +339,7 @@ ListElemType* GetListHead(ListType* list)
     return list->end->next;
 }
 
-ListElemType* GetListTail(ListType* list)
+ListElemType* ListGetTail(ListType* list)
 {
     assert(list);
     assert(list->end);

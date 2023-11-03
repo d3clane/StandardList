@@ -54,8 +54,8 @@ ListErrors ListInsert(ListType* list, ListElemType* anchor, const int value,
                                                             ListElemType** insertedValPtr);
 ListErrors ListErase (ListType* list, ListElemType* anchor);
 
-ListElemType* GetListHead(ListType* list);
-ListElemType* GetListTail(ListType* list);
+ListElemType* ListGetHead(ListType* list);
+ListElemType* ListGetTail(ListType* list);
 
 
 #endif
