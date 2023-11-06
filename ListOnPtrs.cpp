@@ -11,11 +11,20 @@ static inline ListErrors ListElemInit(ListElemType* elem,
                                       const int value,
                                       ListElemType* prev, ListElemType* next);
 
-static inline void CreateNode(FILE* outDotFile,
-                              const size_t id, const int value, 
-                              const size_t next, const size_t prev);
+//------Graphic dump funcs-------
+static inline void CreateMainNodeDotFile(FILE* outDotFile,
+                                         const size_t id, const int value, 
+                                         const size_t next, const size_t prev);
 
-static void inline CreateImgInLogFile(const size_t imgIndex);
+static void CreateMainNodesDotFile      (FILE* outDotFile, const ListType* list);
+static void CreateMainEdgesDotFile      (FILE* outDotFile, const ListType* list);
+static void CreateAuxiliaryInfoDotFile (FILE* outDotFile, const ListType* list);
+static void CreateFictiousEdgesDotFile  (FILE* outDotFile, const ListType* list);
+
+static inline void CreateImgInLogFile(const size_t imgIndex);
+static inline void BeginDotFile(FILE* outDotFile);
+static inline void EndDotFile  (FILE* outDotFile);
+
 
 #define LIST_CHECK(list)                                \
 do                                                      \
@@ -61,7 +70,6 @@ ListErrors ListDtor(ListType* list)
         ListElemDtor(blockToErase);
     }
 
-    //delete fictious element
     ListElemDtor(list->end);
     list->end = nullptr;
 
@@ -109,9 +117,9 @@ void ListDump(ListType* list, const char* fileName,
     ListGraphicDump(list);
 }
 
-void ListTextDump(ListType* list, const char* fileName,
-                                  const char* funcName,
-                                  const int   line)
+void ListTextDump(const ListType* list, const char* fileName,
+                                        const char* funcName,
+                                        const int   line)
 {
     assert(list);
     assert(fileName);
@@ -139,17 +147,17 @@ void ListTextDump(ListType* list, const char* fileName,
     LOG_END();
 }
 
-static inline void CreateNode(FILE* outDotFile,
-                              const size_t id, const int value, 
-                              const size_t next, const size_t prev)
+static inline void CreateMainNodeDotFile(FILE* outDotFile,
+                                     const size_t id, const int value, 
+                                     const size_t next, const size_t prev)
 {
     assert(outDotFile);
 
     fprintf(outDotFile, "node%zu"
                         "[shape=Mrecord, style=filled, fillcolor=\"#7293ba\","
-                        "label=\" id: %zu |"
-                              "value: %d  |" 
-                          "<f0> next: %zu |"
+                        "label=\" id: %zu  |"
+                              "value: %d   |" 
+                          "<f0> next: %zu  |"
                           "<f1> prev: %zu\","
                         "color = \"#008080\"];\n",
                         id, id,
@@ -157,7 +165,58 @@ static inline void CreateNode(FILE* outDotFile,
                         next, prev); 
 }
 
-static void inline CreateImgInLogFile(const size_t imgIndex)
+static void CreateMainNodesDotFile(FILE* outDotFile, const ListType* list)
+{
+    assert(outDotFile);
+    assert(list);
+
+    //---------Fictious element node---------
+
+    CreateMainNodeDotFile(outDotFile, 0, list->end->value, 1, list->size); 
+    size_t elemId = 1;
+
+    //-----Other elements nodes-----
+
+    ListElemType* listTail = ListGetTail(list);
+    for (ListElemType* listElem = ListGetHead(list); listElem != listTail; listElem = listElem->next)
+    {
+        CreateMainNodeDotFile(outDotFile, elemId, listElem->value, elemId + 1, elemId - 1); 
+        elemId++;     
+    }  
+
+    //--------Tail element node----------
+
+    CreateMainNodeDotFile(outDotFile, elemId, listTail->value, 0, elemId - 1);   
+}
+
+static void CreateFictiousEdgesDotFile(FILE* outDotFile, const ListType* list)
+{
+    fprintf(outDotFile, "\nnode0");
+    for (size_t i = 1; i <= list->size; ++i)
+        fprintf(outDotFile, "->node%zu", i);
+    fprintf(outDotFile, "[color=\"#31353b\", weight = 1, fontcolor=\"blue\",fontsize=78];\n");
+}
+
+static void CreateMainEdgesDotFile(FILE* outDotFile, const ListType* list)
+{
+    fprintf(outDotFile, "edge[color=\"red\", fontsize=12, constraint=false];\n");
+    for (size_t i = 0; i < list->size; ++i)
+    {
+        fprintf(outDotFile, "node%zu->node%zu;\n", i, i + 1);
+    }
+    fprintf(outDotFile, "node%zu->node%zu;\n", list->size, 0lu);
+}
+
+static void CreateAuxiliaryInfoDotFile(FILE* outDotFile, const ListType* list)
+{
+    fprintf(outDotFile, "node[shape = octagon, style = \"filled\", fillcolor = \"lightgray\"];\n");
+    fprintf(outDotFile, "edge[color = \"lightgreen\"];\n");
+    fprintf(outDotFile, "head->node%zu;\n", 1lu);
+    fprintf(outDotFile, "tail->node%zu;\n", list->size);
+    fprintf(outDotFile, "\"Fictious element\"->node%zu;\n", 0lu);
+}
+
+static inline void CreateImgInLogFile(const size_t imgIndex)
 {
     static const size_t maxImgNameLength  = 64;
     static char imgName[maxImgNameLength] = "";
@@ -173,71 +232,39 @@ static void inline CreateImgInLogFile(const size_t imgIndex)
     Log(commandName);
 }
 
-void ListGraphicDump(ListType* list)
+static inline void BeginDotFile(FILE* outDotFile)
+{
+    fprintf(outDotFile, "digraph G{\nrankdir=LR;\ngraph [bgcolor=\"#31353b\"];\n");
+}
+
+static inline void EndDotFile(FILE* outDotFile)
+{
+    fprintf(outDotFile, "}\n");
+}
+
+
+void ListGraphicDump(const ListType* list)
 {
     assert(list);
 
-    static const char* tmpDotFileName = "list.dot";
-    FILE* outDotFile = fopen(tmpDotFileName, "w");
+    static const char* dotFileName = "list.dot";
+    FILE* outDotFile = fopen(dotFileName, "w");
 
-    fprintf(outDotFile, "digraph G{\nrankdir=LR;\n"
-                        "node[shape=rectangle, color=\"red\",fontsize=14];"
-                        "\ngraph [bgcolor=\"#31353b\"];\n");
+    if (outDotFile == nullptr)
+        return;
+    
+    BeginDotFile(outDotFile);
 
-    //---------Fictious element node---------
+    CreateMainNodesDotFile(outDotFile, list);
+    CreateFictiousEdgesDotFile(outDotFile, list);
+    CreateMainEdgesDotFile(outDotFile, list);
+    CreateAuxiliaryInfoDotFile(outDotFile, list);
 
-    CreateNode(outDotFile, 0, list->end->value, 1, list->size); 
-    size_t elemId = 1;
-
-    //-----Other elements nodes-----
-
-    ListElemType* listTail = ListGetTail(list);
-    for (ListElemType* listElem = ListGetHead(list); listElem != listTail; listElem = listElem->next)
-    {
-        CreateNode(outDotFile, elemId, listElem->value, elemId + 1, elemId - 1); 
-        elemId++;     
-    }  
-
-    //--------Tail element node----------
-
-    CreateNode(outDotFile, elemId, listTail->value, 0, elemId - 1);
-
-    //--------Edges--------
-
-    fprintf(outDotFile, "edge[color=\"#31353b\", weight = 1, fontcolor=\"blue\",fontsize=78];\n");
-
-    static const size_t numberOfWhiteArrows = 10;
-    for (size_t whiteArrowId = 0; whiteArrowId < numberOfWhiteArrows; ++whiteArrowId)
-    {
-        fprintf(outDotFile, "node0");
-
-        for (size_t i = 1; i <= list->size; ++i)
-            fprintf(outDotFile, "->node%zu", i);
-
-        fprintf(outDotFile, ";\n");
-    }
-
-    fprintf(outDotFile, "edge[color=\"red\", fontsize=12, constraint=false];\n");
-
-    for (size_t i = 0; i < list->size; ++i)
-    {
-        fprintf(outDotFile, "node%zu->node%zu;\n", i, i + 1);
-    }
-
-    fprintf(outDotFile, "node%zu->node%zu;\n", list->size, 0lu);
-
-    fprintf(outDotFile, "node[shape = octagon, style = \"filled\", fillcolor = \"lightgray\"];\n");
-    fprintf(outDotFile, "edge[color = \"lightgreen\"];\n");
-    fprintf(outDotFile, "head->node%zu;\n", 1lu);
-    fprintf(outDotFile, "tail->node%zu;\n", list->size);
-    fprintf(outDotFile, "\"Fictious element\"->node%zu;\n", 0lu);
-
-    fprintf(outDotFile, "}\n");
+    EndDotFile(outDotFile);
 
     fclose(outDotFile);
 
     static size_t imgIndex = 0;
-
     CreateImgInLogFile(imgIndex);
     imgIndex++;    
 }
@@ -251,17 +278,18 @@ ListErrors ListInsert(ListType* list, ListElemType* anchor, const int value,
 
     LIST_CHECK(list);
 
-    ListElemType* elemToInsert = nullptr;
-    ListErrors error = ListElemCtor(&elemToInsert);
+    ListElemType* insertedElement = nullptr;
+
+    ListErrors error = ListElemCtor(&insertedElement);
 
     if (error != ListErrors::NO_ERR)
         return error;
 
-    *insertedValPtr = elemToInsert;
-    //проверить порядок
-    ListElemInit(elemToInsert, value, anchor->prev, anchor);
-    anchor->prev->next = elemToInsert;
-    anchor->prev       = elemToInsert;
+    *insertedValPtr = insertedElement;
+
+    ListElemInit(insertedElement, value, anchor->prev, anchor);
+    anchor->prev->next = insertedElement;
+    anchor->prev       = insertedElement;
 
     list->size++;
 
@@ -280,7 +308,6 @@ ListErrors ListErase (ListType* list, ListElemType* anchor)
     anchor->prev->next = anchor->next;
     anchor->next->prev = anchor->prev;
 
-    ListElemInit(anchor, POISON, nullptr, nullptr);
     ListElemDtor(anchor);
 
     list->size--;
@@ -331,7 +358,7 @@ static inline ListErrors ListElemInit(ListElemType* elem,
     return ListErrors::NO_ERR;
 }
 
-ListElemType* ListGetHead(ListType* list)
+ListElemType* ListGetHead(const ListType* list)
 {
     assert(list);
     assert(list->end);
@@ -339,7 +366,7 @@ ListElemType* ListGetHead(ListType* list)
     return list->end->next;
 }
 
-ListElemType* ListGetTail(ListType* list)
+ListElemType* ListGetTail(const ListType* list)
 {
     assert(list);
     assert(list->end);
