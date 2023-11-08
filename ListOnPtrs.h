@@ -31,6 +31,9 @@ enum class ListErrors
     INVALID_ELEMENT_PTR,
     
     INVALID_FICTIOUS_ELEMENT,
+
+    TRYING_TO_GET_NULL_ELEMENT,
+    TRYING_TO_CHANGE_NULL_ELEMENT,
 };
 
 
@@ -54,8 +57,12 @@ ListErrors ListInsert(ListType* list, ListElemType* anchor, const int value,
                                                             ListElemType** insertedValPtr);
 ListErrors ListErase (ListType* list, ListElemType* anchor);
 
+ListErrors ListGetElemValue(ListType* list, ListElemType* elem,       int* elemValue);
+ListErrors ListSetElemValue(ListType* list, ListElemType* elem, const int  value);
+ListErrors ListGetElemNext (ListType* list, ListElemType* elem, ListElemType** elemNext);
+ListErrors ListGetElemPrev (ListType* list, ListElemType* elem, ListElemType** elemPrev);
+
 ListElemType* ListGetHead(const ListType* list);
 ListElemType* ListGetTail(const ListType* list);
-
 
 #endif

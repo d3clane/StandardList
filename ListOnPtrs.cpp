@@ -317,6 +317,71 @@ ListErrors ListErase (ListType* list, ListElemType* anchor)
     return ListErrors::NO_ERR;
 }
 
+ListErrors ListGetElemValue(ListType* list, ListElemType* elem, int* elemValue)
+{
+    assert(list);
+    assert(elem);
+    assert(elemValue);
+
+    LIST_CHECK(list);
+
+    if (elem == list->end)
+        return ListErrors::TRYING_TO_GET_NULL_ELEMENT;
+
+    *elemValue = elem->value;
+
+    return ListErrors::NO_ERR;  
+}
+
+ListErrors ListSetElemValue(ListType* list, ListElemType* elem, const int  value)
+{
+    assert(list);
+    assert(elem);
+
+    LIST_CHECK(list);
+
+    if (elem == list->end)
+        return ListErrors::TRYING_TO_CHANGE_NULL_ELEMENT;
+
+    elem->value = value;
+
+    LIST_CHECK(list);
+
+    return ListErrors::NO_ERR; 
+}
+
+ListErrors ListGetElemNext (ListType* list, ListElemType* elem, ListElemType** elemNext)
+{
+    assert(list);
+    assert(elem);
+    assert(elemNext);
+
+    LIST_CHECK(list);
+
+    if (elem == list->end)
+        return ListErrors::TRYING_TO_GET_NULL_ELEMENT;
+    
+    *elemNext = elem->next;
+
+    return ListErrors::NO_ERR;
+}
+
+ListErrors ListGetElemPrev (ListType* list, ListElemType* elem, ListElemType** elemPrev)
+{
+    assert(list);
+    assert(elem);
+    assert(elemPrev);
+
+    LIST_CHECK(list);
+
+    if (elem == list->end)
+        return ListErrors::TRYING_TO_GET_NULL_ELEMENT;
+
+    *elemPrev = elem->prev;
+
+    return ListErrors::NO_ERR;
+}
+
 static inline ListErrors ListElemDtor(ListElemType* elem)
 {
     assert(elem);
