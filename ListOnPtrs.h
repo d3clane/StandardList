@@ -1,7 +1,7 @@
 #ifndef LIST_ON_PTRS_H
 #define LIST_ON_PTRS_H
 
-#include <stdio.h>
+#include <stddef.h>
 
 struct ListElemType
 {
